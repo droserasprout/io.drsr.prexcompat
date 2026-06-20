@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Prex Compat</string>
+    <string name="module_description">Compatibility shim for the Prex app on de-googled / rooted devices.</string>
+</resources>
