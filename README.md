@@ -13,11 +13,13 @@ Xposed module to make the [Prex Uruguay](https://play.google.com/store/apps/deta
 
 ### KYC
 
-> Does not touch the document classifier or anything uploaded to Incode — only disables the local root/hook check. Your real ID is scanned and sent unchanged.
+> ⚠️ This module does not touch the document classifier or anything uploaded to Incode — only disables the **local** root/hook check. Your real ID is scanned and sent unchanged.
 
-Around `10.72.00` Prex added ID verification via the Incode Welcome SDK, whose anti-tamper layer detects Xposed and throws `DeviceEnvironmentException` right after capture ("No se pudo validar tu identidad") — tripping on the very module running the hooks above.
+Prex has ID verification via the Incode Welcome SDK, whose anti-tamper layer detects Xposed and throws `DeviceEnvironmentException` right after capture ("No se pudo validar tu identidad") despite successful upload (I've got `cls: 0.99, frameScore: 2.89, isSuccessful: true` on first attempt)
 
 - **IncodeHook** — no-ops the SDK's environment gate (`com.incode.welcome_sdk.commons.utils.n#d`), which throws on emulator / hooking framework / virtual environment / root. Obfuscated name is version-specific.
+
+Oh the irony, "Welcome SDK" that tells you're not welcome.
 
 ## Tested configurations
 
@@ -25,11 +27,11 @@ Tested on Android 15/16 (LineageOS) + Magisk + Zygisk + LSPosed, should work on 
 
 App versions:
 
-- `10.69.01` - one of the latest without broken Firebase. Not working, disabled by Prex.
+- `10.69.01` - Worked without Firebase fix. Now disabled by Prex.
 - `10.72.00` - Active, tested with PrexCompat.
-- `10.74.00` - Latest. NOT TESTED.
+- `10.74.00` - Active, tested with PrexCompat.
 
-Also not tested on other regional variants — [Argentina](https://play.google.com/store/apps/details?id=air.PrexArgentina), [Chile](https://play.google.com/store/apps/details?id=air.PrexChile), [Peru](https://play.google.com/store/apps/details?id=air.PrexPeru). PRs are welcome.
+Not tested on other regional variants — [Argentina](https://play.google.com/store/apps/details?id=air.PrexArgentina), [Chile](https://play.google.com/store/apps/details?id=air.PrexChile), [Peru](https://play.google.com/store/apps/details?id=air.PrexPeru). PRs are welcome.
 
 ## Build
 
