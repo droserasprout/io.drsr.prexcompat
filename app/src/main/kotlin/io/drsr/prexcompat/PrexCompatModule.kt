@@ -10,5 +10,6 @@ class PrexCompatModule : IXposedHookLoadPackage {
         if (lpparam.packageName != TARGET_PACKAGE || lpparam.processName != TARGET_PACKAGE) return
         RootHook.init(lpparam)
         FirebaseFix.init(lpparam)
+        IncodeHook.init(lpparam)
     }
 }
