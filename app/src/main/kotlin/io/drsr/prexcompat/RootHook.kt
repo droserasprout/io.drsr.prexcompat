@@ -1,9 +1,6 @@
 package io.drsr.prexcompat
 
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers
-import de.robv.android.xposed.callbacks.XC_LoadPackage
+import io.github.libxposed.api.XposedModule
 
 object RootHook {
     private val ROOTBEER_METHODS =
@@ -16,44 +13,33 @@ object RootHook {
         )
     private val IROOT_METHODS = listOf("isRooted", "isRootedWithEmulator", "isRunningOnEmulator")
 
-    fun init(lpparam: XC_LoadPackage.LoadPackageParam) {
-        val cl = lpparam.classLoader
-        val returnFalse =
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    param.result = false
-                }
-            }
-        hookMethods(cl, "com.scottyab.rootbeer.RootBeer", ROOTBEER_METHODS, returnFalse)
-        hookMethods(cl, "de.cyberkatze.iroot.InternalRootDetection", IROOT_METHODS, returnFalse)
-        try {
-            val native = XposedHelpers.findClass("com.scottyab.rootbeer.RootBeerNative", cl)
-            XposedBridge.hookAllMethods(
-                native,
-                "checkForRoot",
-                object : XC_MethodHook() {
-                    override fun beforeHookedMethod(param: MethodHookParam) {
-                        param.result = 0
-                    }
-                },
-            )
-        } catch (e: Throwable) {
-            XLog.log("RootBeerNative not found: $e")
-        }
-        XLog.log("root detectors neutralized")
+    fun init(
+        module: XposedModule,
+        cl: ClassLoader,
+    ) {
+        forceResult(module, cl, "com.scottyab.rootbeer.RootBeer", ROOTBEER_METHODS, false)
+        forceResult(module, cl, "de.cyberkatze.iroot.InternalRootDetection", IROOT_METHODS, false)
+        // RootBeerNative.checkForRoot returns int; the classic hook forced it to 0.
+        forceResult(module, cl, "com.scottyab.rootbeer.RootBeerNative", listOf("checkForRoot"), 0)
+        module.logi("root detectors neutralized")
     }
 
-    private fun hookMethods(
+    // Replaces every overload named in `methods` on `className` with one that returns `result`
+    // without invoking the original (return-without-proceed skips the real method).
+    private fun forceResult(
+        module: XposedModule,
         cl: ClassLoader,
         className: String,
         methods: List<String>,
-        hook: XC_MethodHook,
+        result: Any?,
     ) {
         try {
-            val clazz = XposedHelpers.findClass(className, cl)
-            methods.forEach { XposedBridge.hookAllMethods(clazz, it, hook) }
+            val clazz = Class.forName(className, false, cl)
+            clazz.declaredMethods
+                .filter { it.name in methods }
+                .forEach { m -> module.hook(m).intercept { result } }
         } catch (e: Throwable) {
-            XLog.log("$className not found: $e")
+            module.logi("$className not found: $e")
         }
     }
 }

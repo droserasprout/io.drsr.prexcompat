@@ -17,8 +17,8 @@ android {
         applicationId = "io.drsr.prexcompat"
         minSdk = 28
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.2.0"
     }
 
     signingConfigs {
@@ -45,8 +45,14 @@ android {
     kotlinOptions {
         jvmTarget = "21"
     }
+
+    packaging {
+        resources {
+            merges += "META-INF/xposed/*"
+        }
+    }
 }
 
 dependencies {
-    compileOnly("de.robv.android.xposed:api:82")
+    compileOnly("io.github.libxposed:api:101.0.1")
 }

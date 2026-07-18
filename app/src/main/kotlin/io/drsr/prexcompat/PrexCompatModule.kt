@@ -1,15 +1,27 @@
 package io.drsr.prexcompat
 
-import de.robv.android.xposed.IXposedHookLoadPackage
-import de.robv.android.xposed.callbacks.XC_LoadPackage
+import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
+import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
 
 private const val TARGET_PACKAGE = "air.Prex"
 
-class PrexCompatModule : IXposedHookLoadPackage {
-    override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        if (lpparam.packageName != TARGET_PACKAGE || lpparam.processName != TARGET_PACKAGE) return
-        RootHook.init(lpparam)
-        FirebaseFix.init(lpparam)
-        IncodeHook.init(lpparam)
+// Modern Xposed API (>=101) entry point. Registered via META-INF/xposed/java_init.list;
+// the framework instantiates it once per scoped process using the no-arg constructor.
+class PrexCompatModule : XposedModule() {
+    // onPackageReady only exposes the package name, so capture the process name here (the
+    // classic module keyed off lpparam.processName to run in the main process only).
+    private var processName: String = ""
+
+    override fun onModuleLoaded(param: ModuleLoadedParam) {
+        processName = param.processName
+    }
+
+    override fun onPackageReady(param: PackageReadyParam) {
+        if (param.packageName != TARGET_PACKAGE || processName != TARGET_PACKAGE) return
+        val cl = param.classLoader
+        RootHook.init(this, cl)
+        FirebaseFix.init(this, cl)
+        IncodeHook.init(this, cl)
     }
 }

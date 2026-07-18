@@ -1,8 +1,6 @@
 package io.drsr.prexcompat
 
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedHelpers
-import de.robv.android.xposed.callbacks.XC_LoadPackage
+import io.github.libxposed.api.XposedModule
 
 // Incode Welcome SDK's anti-tamper layer throws DeviceEnvironmentException after a
 // document is captured, failing KYC with "No se pudo validar tu identidad". The gate is
@@ -14,22 +12,18 @@ object IncodeHook {
     private const val GATE_METHOD = "d"
     private const val VERDICT_CLASS = "com.incode.welcome_sdk.commons.utils.n\$d"
 
-    fun init(lpparam: XC_LoadPackage.LoadPackageParam) {
+    fun init(
+        module: XposedModule,
+        cl: ClassLoader,
+    ) {
         try {
-            XposedHelpers.findAndHookMethod(
-                GATE_CLASS,
-                lpparam.classLoader,
-                GATE_METHOD,
-                VERDICT_CLASS,
-                object : XC_MethodHook() {
-                    override fun beforeHookedMethod(param: MethodHookParam) {
-                        param.result = null
-                    }
-                },
-            )
-            XLog.log("Incode environment gate neutralized")
+            val gate = Class.forName(GATE_CLASS, false, cl)
+            val verdict = Class.forName(VERDICT_CLASS, false, cl)
+            val method = gate.getDeclaredMethod(GATE_METHOD, verdict)
+            module.hook(method).intercept { null }
+            module.logi("Incode environment gate neutralized")
         } catch (e: Throwable) {
-            XLog.log("Incode environment gate not found: $e")
+            module.logi("Incode environment gate not found: $e")
         }
     }
 }
