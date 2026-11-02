@@ -5,6 +5,8 @@
 .DS_Store
 /build
 /app/build
+/art-view-sync/bin/artviewsync
 /captures
 .externalNativeBuild
 .cxx
+/priv/

@@ -1,0 +1,6 @@
+id=artviewsync
+name=ART View Sync
+version=1.0.0
+versionCode=1
+author=drsr
+description=Synchronizes an app-visible libart.so with live ART memory for compatibility with instrumentation. Currently targets air.Prex; validated with Incode and LSPosed. Does not modify SDK code, process memory, or verification results.

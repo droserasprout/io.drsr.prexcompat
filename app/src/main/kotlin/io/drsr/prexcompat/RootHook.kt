@@ -19,13 +19,12 @@ object RootHook {
     ) {
         forceResult(module, cl, "com.scottyab.rootbeer.RootBeer", ROOTBEER_METHODS, false)
         forceResult(module, cl, "de.cyberkatze.iroot.InternalRootDetection", IROOT_METHODS, false)
-        // RootBeerNative.checkForRoot returns int; the classic hook forced it to 0.
+        // The native check returns an integer, not a boolean.
         forceResult(module, cl, "com.scottyab.rootbeer.RootBeerNative", listOf("checkForRoot"), 0)
         module.logi("root detectors neutralized")
     }
 
-    // Replaces every overload named in `methods` on `className` with one that returns `result`
-    // without invoking the original (return-without-proceed skips the real method).
+    // Match all overloads of each named method.
     private fun forceResult(
         module: XposedModule,
         cl: ClassLoader,

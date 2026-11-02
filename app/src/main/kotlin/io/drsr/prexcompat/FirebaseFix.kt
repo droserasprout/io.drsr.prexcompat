@@ -41,8 +41,7 @@ object FirebaseFix {
         }
     }
 
-    // Stable, per-device, unique-looking id derived from ANDROID_ID.
-    // Deterministic, salted, cached. Returns null if it can't be derived.
+    // Use a stable device-derived ID when Firebase cannot supply one.
     private fun instanceId(
         module: XposedModule,
         plugin: Any,

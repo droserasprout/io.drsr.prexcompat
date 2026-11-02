@@ -13,25 +13,28 @@ Xposed module to make the [Prex Uruguay](https://play.google.com/store/apps/deta
 
 ### KYC
 
-> ⚠️ This module does not touch the document classifier or anything uploaded to Incode — only disables the **local** root/hook check. Your real ID is scanned and sent unchanged.
+Incode’s device checks can reject rooted devices or crash when LSPosed is loaded.
 
-Prex has ID verification via the Incode Welcome SDK, whose anti-tamper layer detects Xposed and throws `DeviceEnvironmentException` right after capture ("No se pudo validar tu identidad") despite successful upload (I've got `cls: 0.99, frameScore: 2.89, isSuccessful: true` on first attempt)
+- **IncodeHook** skips the legacy environment gate and reads
+  `SessionConfig.externalToken` directly to avoid a crash in its protected getter.
+  It preserves the token, including null.
+- **[ART View Sync](art-view-sync/README.md)** is a companion Magisk module.
+  It gives the app a copy of `libart.so` matching its live ART memory, allowing
+  Incode’s file comparison to pass with LSPosed loaded.
 
-- **IncodeHook** — no-ops the SDK's environment gate (`com.incode.welcome_sdk.commons.utils.n#d`), which throws on emulator / hooking framework / virtual environment / root. Obfuscated name is version-specific.
-
-Oh the irony, "Welcome SDK" that tells you're not welcome.
+Document capture, liveness checks, uploads, and server verification are unchanged.
 
 ## Tested configurations
 
-Built against the [modern Xposed API](https://github.com/libxposed/api) (`minApiVersion=101`), so it requires an LSPosed build that supports the modern API. Older Xposed/EdXposed and pre-modern-API LSPosed releases will not load it.
+Tested on Android 15/16/17 (LineageOS) with Magisk, Zygisk, and LSPosed.
+Additional root hiding tools such as Shamiko are not required.
 
-Tested on Android 15/16 (LineageOS) + Magisk + Zygisk + LSPosed, should work on other configurations. Additional root hiding solutions like Shamiko are not required, but don't interfere either.
+Active app versions:
 
-App versions:
+- `10.80.00` - Working with PrexCompat.
+- `10.79.00` - Working with PrexCompat. Selfie KYC verified.
 
-- `10.69.01` - Worked without Firebase fix. Now disabled by Prex.
-- `10.72.00` - Active, tested with PrexCompat.
-- `10.74.00` - Active, tested with PrexCompat.
+Older versions are disabled by Prex.
 
 Not tested on other regional variants — [Argentina](https://play.google.com/store/apps/details?id=air.PrexArgentina), [Chile](https://play.google.com/store/apps/details?id=air.PrexChile), [Peru](https://play.google.com/store/apps/details?id=air.PrexPeru). PRs are welcome.
 
@@ -40,13 +43,23 @@ Not tested on other regional variants — [Argentina](https://play.google.com/st
 ```sh
 # app/build/outputs/apk/debug/app-debug.apk
 make build
+
+# build/art-view-sync.zip
+make magisk
 ```
 
-Requires JDK 21 + Android SDK.
+Requires JDK 21 and Android SDK 36. Build ART View Sync separately using
+its [build instructions](art-view-sync/README.md#build).
 
 ## Install
 
 Install the APK and enable the module in LSPosed, then force-stop the app. Scope is fixed to `air.Prex` (`staticScope=true` via `META-INF/xposed/scope.list`), so no manual scope selection is needed. If you're running Magisk with "Enforce DenyList" enabled — remove Prex from this list to allow Xposed injection.
+
+If app requests selfie verification to pass KYC:
+
+- Install ART View Sync module, reboot
+- Pass the KYC in Prex
+- Disable or uninstall module, reboot
 
 ## License
 
